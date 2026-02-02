@@ -1147,22 +1147,22 @@ TEST_F(ModbusTcpPortTest, WriteMethodWhenNotOpen)
 {
     port = new ModbusTcpPortTestHelper();
     
-    // Port is not open, so write should return error or Status_Processing
+    // Port is not open, so write should return error
     StatusCode result = port->testWrite();
     
     // When not opened, write returns Status_Processing
-    EXPECT_EQ(result, Status_Processing);
+    EXPECT_TRUE(StatusIsBad(result));
 }
 
 TEST_F(ModbusTcpPortTest, ReadMethodWhenNotOpen)
 {
     port = new ModbusTcpPortTestHelper();
     
-    // Port is not open, so read should return error or Status_Processing
+    // Port is not open, so read should return error
     StatusCode result = port->testRead();
     
-    // When not opened, read returns Status_Processing
-    EXPECT_EQ(result, Status_Processing);
+    // When not opened, read returns error
+    EXPECT_TRUE(StatusIsBad(result));
 }
 
 TEST_F(ModbusTcpPortTest, WriteMethodWithValidData)

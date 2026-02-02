@@ -203,31 +203,44 @@ bool ModbusTcpPort::isOpen() const
 StatusCode ModbusTcpPort::write()
 {
     ModbusTcpPortPrivateUnix *d = d_unix(d_ptr);
-    switch (d->state)
+    bool fRepeatAgain;
+    do
     {
-    case STATE_OPENED:
-    case STATE_PREPARE_TO_WRITE:
-    case STATE_WAIT_FOR_WRITE:
-    case STATE_WAIT_FOR_WRITE_ALL:
-    {
-        ssize_t c = d->socket->send(reinterpret_cast<char*>(d->buff), d->sz, 0);
-        if (c > 0)
+        fRepeatAgain = false;
+        switch (d->state)
         {
-            d->state = STATE_OPENED;
-            return Status_Good;
+        case STATE_OPENED:
+        case STATE_PREPARE_TO_WRITE:
+        case STATE_WAIT_FOR_WRITE:
+        case STATE_WAIT_FOR_WRITE_ALL:
+        {
+            ssize_t c = d->socket->send(reinterpret_cast<char*>(d->buff), d->sz, 0);
+            if (c > 0)
+            {
+                d->state = STATE_OPENED;
+                return Status_Good;
+            }
+            else
+            {
+                close();
+                return d->setError(Status_BadTcpWrite, StringLiteral("TCP. Error while writing to '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
+                                                       StringLiteral("'. Error code: ") + toModbusString(errno) +
+                                                       StringLiteral(". ") + getLastErrorText());
+            }
         }
-        else
-        {
-            close();
-            return d->setError(Status_BadTcpWrite, StringLiteral("TCP. Error while writing to '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
-                                                   StringLiteral("'. Error code: ") + toModbusString(errno) +
-                                                   StringLiteral(". ") + getLastErrorText());
+            break;
+        default:
+            if (this->isOpen())
+            {
+                d->state = STATE_OPENED;
+                fRepeatAgain = true;
+            }
+            else
+                return d->setError(Status_BadTcpWrite, StringLiteral("Internal state error"));
+            break;
         }
     }
-        break;
-    default:
-        break;
-    }
+    while (fRepeatAgain);
     return Status_Processing;
 }
 
@@ -235,54 +248,67 @@ StatusCode ModbusTcpPort::read()
 {
     ModbusTcpPortPrivateUnix *d = d_unix(d_ptr);
     const uint16_t size = MBCLIENTTCP_BUFF_SZ;
-    switch (d->state)
+    bool fRepeatAgain;
+    do
     {
-    case STATE_OPENED:
-    case STATE_PREPARE_TO_READ:
-        d->timestamp = timer();
-        d->state = STATE_WAIT_FOR_READ;
-        // no need break
-    case STATE_WAIT_FOR_READ:
-    case STATE_WAIT_FOR_READ_ALL:
-    {
-        ssize_t c = d->socket->recv(reinterpret_cast<char*>(d->buff), size, 0);
-        if (c > 0)
+        fRepeatAgain = false;
+        switch (d->state)
         {
-            d->sz = static_cast<uint16_t>(c);
-            d->state = STATE_OPENED;
-            return Status_Good;
-        }
-        else if (c == 0)
+        case STATE_OPENED:
+        case STATE_PREPARE_TO_READ:
+            d->timestamp = timer();
+            d->state = STATE_WAIT_FOR_READ;
+            // no need break
+        case STATE_WAIT_FOR_READ:
+        case STATE_WAIT_FOR_READ_ALL:
         {
-            close();
-            // Note: When connection is remotely closed is not error for server side
-            if (d->modeServer)
-                return Status_Uncertain;
-            else
-                return d->setError(Status_BadTcpRead, StringLiteral("TCP. Error while reading from '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
-                                                      StringLiteral("'. Remote connection closed") );
-        }
-        else if (isNonBlocking() && (timer() - d->timestamp >= d->settingsBase.timeout)) // waiting timeout read first byte elapsed
-        {
-            close();
-            return d->setError(Status_BadTcpRead, StringLiteral("TCP. Error while reading from '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
-                                                  StringLiteral("'. Timeout") );
-        }
-        else
-        {
-            int e = errno;
-            if (e != EWOULDBLOCK)
+            ssize_t c = d->socket->recv(reinterpret_cast<char*>(d->buff), size, 0);
+            if (c > 0)
+            {
+                d->sz = static_cast<uint16_t>(c);
+                d->state = STATE_OPENED;
+                return Status_Good;
+            }
+            else if (c == 0)
+            {
+                close();
+                // Note: When connection is remotely closed is not error for server side
+                if (d->modeServer)
+                    return Status_Uncertain;
+                else
+                    return d->setError(Status_BadTcpRead, StringLiteral("TCP. Error while reading from '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
+                                                          StringLiteral("'. Remote connection closed") );
+            }
+            else if (isNonBlocking() && (timer() - d->timestamp >= d->settingsBase.timeout)) // waiting timeout read first byte elapsed
             {
                 close();
                 return d->setError(Status_BadTcpRead, StringLiteral("TCP. Error while reading from '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
-                                                      StringLiteral("'. Error code: ") + toModbusString(errno) +
-                                                      StringLiteral(". ") + getLastErrorText());
+                                                      StringLiteral("'. Timeout") );
+            }
+            else
+            {
+                int e = errno;
+                if (e != EWOULDBLOCK)
+                {
+                    close();
+                    return d->setError(Status_BadTcpRead, StringLiteral("TCP. Error while reading from '") + d->settings.host + StringLiteral(":") + toModbusString(d->settings.port) +
+                                                          StringLiteral("'. Error code: ") + toModbusString(errno) +
+                                                          StringLiteral(". ") + getLastErrorText());
+                }
             }
         }
+            break;
+        default:
+            if (this->isOpen())
+            {
+                d->state = STATE_OPENED;
+                fRepeatAgain = true;
+            }
+            else
+                return d->setError(Status_BadTcpRead, StringLiteral("Internal state error"));
+            break;
+        }
     }
-        break;
-    default:
-        break;
-    }
+    while (fRepeatAgain);
     return Status_Processing;
 }

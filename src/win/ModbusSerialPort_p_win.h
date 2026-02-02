@@ -161,7 +161,7 @@ StatusCode ModbusSerialPortPrivateWin::nonBlockingWrite()
                 fRepeatAgain = true;
             }
             else
-                return this->setError(Status_BadSerialWrite, StringLiteral("Internal error"));
+                return this->setError(Status_BadSerialWrite, StringLiteral("Internal state error"));
             break;
         }
     }
@@ -286,7 +286,7 @@ StatusCode ModbusSerialPortPrivateWin::nonBlockingRead()
                 fRepeatAgain = true;
             }
             else
-                return this->setError(Status_BadSerialRead, StringLiteral("Internal error"));
+                return this->setError(Status_BadSerialRead, StringLiteral("Internal state error"));
             break;
         }
     }
