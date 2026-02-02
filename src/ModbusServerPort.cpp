@@ -58,6 +58,26 @@ void ModbusServerPort::setUnitMap(const void *unitmap)
     d_ModbusServerPort(d_ptr)->setUnitMap(unitmap);
 }
 
+Modbus::String ModbusServerPort::unitMapString() const
+{
+    if (const void *unitmap = this->unitMap())
+        return Modbus::unitMapToString(unitmap);
+    return Modbus::String();
+}
+
+void ModbusServerPort::setUnitMapString(const Modbus::Char *s)
+{
+    if (s == nullptr || *s == '\0')
+    {
+        this->setUnitMap(nullptr);
+        return;
+    }
+    uint8_t unitmap[MB_UNITMAP_SIZE];
+    memset(unitmap, 0, MB_UNITMAP_SIZE);
+    if (fillUnitMap(s, unitmap))
+        this->setUnitMap(unitmap);
+}
+
 bool ModbusServerPort::isUnitEnabled(uint8_t unit) const
 {
     return d_ModbusServerPort(d_ptr)->isUnitEnabled(unit);

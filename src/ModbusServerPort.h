@@ -128,6 +128,19 @@ public: // server port interface
     /// \sa `unitMap()`
     virtual void setUnitMap(const void *unitmap);
 
+    /// \details Clear units map of current server. All unit addresses will be enabled for processing.
+    /// Equivalent to `setUnitMap(nullptr)`.
+    inline void clearUnitMap() { setUnitMap(nullptr); }
+
+    /// \details Return unit map bit array string repr like "1,3-8,10"
+    Modbus::String unitMapString() const;
+
+    /// \details Set units map of current server as string like "1,3-8,10"
+    void setUnitMapString(const Modbus::Char *s);
+
+    /// \details Set units map of current server as string like "1,3-8,10"
+    inline void setUnitMapString(const Modbus::String &s) {  setUnitMapString(s.data()); }
+
     /// \details Returns `true` if unit address `unit` is enabled for processing, `false` otherwise.
     /// If unit map is not set (nullptr) then all unit addresses are enabled by default.
     /// If broadcast mode is enabled then function always returns `true` for unit address `0`.
