@@ -1165,9 +1165,10 @@ StatusCode ModbusClientPort::request(uint8_t unit, uint8_t func, uint8_t *buff, 
 
                 if (func != d->func)
                     return d->setError(Status_BadNotCorrectResponse, StringLiteral("Not correct response. Requested function is not equal to responsed"));
+                return r;
             }
         }
-        return d->setPortStatus(r);
+        return d->setPortError(r);
     }
 }
 
@@ -1201,9 +1202,9 @@ StatusCode ModbusClientPort::process()
             r = d->port->open();
             if (StatusIsProcessing(r))
                 return r;
-            d->setPortStatus(r);
             if (StatusIsBad(r)) // an error occured
             {
+                d->setPortError(r);
                 signalError(d->getName(), r, d->port->lastErrorText());
                 d->state = STATE_TIMEOUT;
                 return r;
@@ -1248,9 +1249,9 @@ StatusCode ModbusClientPort::process()
             r = d->port->write();
             if (StatusIsProcessing(r))
                 return r;
-            d->setPortStatus(r);
             if (StatusIsBad(r)) // an error occured
             {
+                d->setPortError(r);
                 signalError(d->getName(), r, d->port->lastErrorText());
                 d->state = STATE_TIMEOUT;
                 return r;
