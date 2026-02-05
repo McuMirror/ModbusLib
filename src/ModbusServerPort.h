@@ -162,6 +162,19 @@ public: // server port interface
     virtual Modbus::StatusCode process() = 0;
 
 public:
+    /// \details Returns the status of the last operation performed.
+    Modbus::StatusCode lastStatus() const;
+
+    /// \details Returns the timestamp of the last operation performed.
+    Modbus::Timestamp lastStatusTimestamp() const;
+
+    /// \details Returns the status of the last error of the performed operation.
+    Modbus::StatusCode lastErrorStatus() const;
+
+    /// \details Returns the text of the last error of the performed operation.
+    virtual const Modbus::Char *lastErrorText() const;
+
+public:
     /// \details Returns `true` if current port has closed inner state, `false` otherwise.
     bool isStateClosed() const;
 
@@ -182,6 +195,9 @@ public: // SIGNALS
 
     /// \details Signal occured when  error is occured with error's `status` and `text`. `source` - current port name.
     void signalError(const Modbus::Char *source, Modbus::StatusCode status, const Modbus::Char *text);
+
+    /// \details Calls each callback of the port when operation is completed.
+    void signalCompleted(const Modbus::Char *source, Modbus::StatusCode status);
 
 protected:
     using ModbusObject::ModbusObject;

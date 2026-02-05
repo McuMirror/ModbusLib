@@ -188,6 +188,12 @@ protected:
     void clearConnections();
 
 protected:
+    /// \cond
+    void setErrorInner(const Modbus::Char *source, Modbus::StatusCode status, const Modbus::Char *text);
+    void setCompletedInner(const Modbus::Char *source, Modbus::StatusCode status);
+    /// \endcond
+
+protected:
     using ModbusServerPort::ModbusServerPort;
 };
 

@@ -39,6 +39,4 @@ public:
     Connections_t connections;
 };
 
-inline ModbusTcpServerPrivate *d_ModbusTcpServer(ModbusObjectPrivate *d_ptr) { return static_cast<ModbusTcpServerPrivate*>(d_ptr); }
-
 #endif // MODBUSTCPSERVER_P_H

@@ -1,6 +1,8 @@
 #include "ModbusTcpPort.h"
 #include "ModbusTcpPort_p.h"
 
+inline ModbusTcpPortPrivate *d_cast(ModbusPortPrivate *d_ptr) { return static_cast<ModbusTcpPortPrivate*>(d_ptr); }
+
 ModbusTcpPort::Defaults::Defaults() :
     host   (StringLiteral("localhost")),
     port   (STANDARD_TCP_PORT),
@@ -16,12 +18,12 @@ const ModbusTcpPort::Defaults &ModbusTcpPort::Defaults::instance()
 
 const Char *ModbusTcpPort::host() const
 {
-    return d_ModbusTcpPort(d_ptr)->settings.host.data();
+    return d_cast(d_ptr)->settings.host.data();
 }
 
 void ModbusTcpPort::setHost(const Char *host)
 {
-    ModbusTcpPortPrivate *d = d_ModbusTcpPort(d_ptr);
+    ModbusTcpPortPrivate *d = d_cast(d_ptr);
     if (d->settings.host != host)
     {
         d->settings.host = host;
@@ -31,12 +33,12 @@ void ModbusTcpPort::setHost(const Char *host)
 
 uint16_t ModbusTcpPort::port() const
 {
-    return d_ModbusTcpPort(d_ptr)->settings.port;
+    return d_cast(d_ptr)->settings.port;
 }
 
 void ModbusTcpPort::setPort(uint16_t port)
 {
-    ModbusTcpPortPrivate *d = d_ModbusTcpPort(d_ptr);
+    ModbusTcpPortPrivate *d = d_cast(d_ptr);
     if (d->settings.port != port)
     {
         d->settings.port = port;
@@ -46,42 +48,42 @@ void ModbusTcpPort::setPort(uint16_t port)
 
 void ModbusTcpPort::setNextRequestRepeated(bool v)
 {
-    d_ModbusTcpPort(d_ptr)->autoIncrement = !v;
+    d_cast(d_ptr)->autoIncrement = !v;
 }
 
 bool ModbusTcpPort::autoIncrement() const
 {
-    return d_ModbusTcpPort(d_ptr)->autoIncrement;
+    return d_cast(d_ptr)->autoIncrement;
 }
 
 uint16_t ModbusTcpPort::transactionId() const
 {
-    return d_ModbusTcpPort(d_ptr)->transaction;
+    return d_cast(d_ptr)->transaction;
 }
 
 const uint8_t *ModbusTcpPort::readBufferData() const
 {
-    return d_ModbusTcpPort(d_ptr)->buff;
+    return d_cast(d_ptr)->buff;
 }
 
 uint16_t ModbusTcpPort::readBufferSize() const
 {
-    return d_ModbusTcpPort(d_ptr)->sz;
+    return d_cast(d_ptr)->sz;
 }
 
 const uint8_t *ModbusTcpPort::writeBufferData() const
 {
-    return d_ModbusTcpPort(d_ptr)->buff;
+    return d_cast(d_ptr)->buff;
 }
 
 uint16_t ModbusTcpPort::writeBufferSize() const
 {
-    return d_ModbusTcpPort(d_ptr)->sz;
+    return d_cast(d_ptr)->sz;
 }
 
 StatusCode ModbusTcpPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff, uint16_t szInBuff)
 {
-    ModbusTcpPortPrivate *d = d_ModbusTcpPort(d_ptr);
+    ModbusTcpPortPrivate *d = d_cast(d_ptr);
     if (!d->modeServer)
     {
         d->transaction += d->autoIncrement;
@@ -108,7 +110,7 @@ StatusCode ModbusTcpPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff,
 
 StatusCode ModbusTcpPort::readBuffer(uint8_t &unit, uint8_t &func, uint8_t *buff, uint16_t maxSzBuff, uint16_t *szOutBuff)
 {
-    ModbusTcpPortPrivate *d = d_ModbusTcpPort(d_ptr);
+    ModbusTcpPortPrivate *d = d_cast(d_ptr);
     if (d->sz < 8)
         return d->setError(Status_BadNotCorrectResponse, StringLiteral("TCP. Not correct response. Responsed data length to small"));
 

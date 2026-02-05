@@ -23,22 +23,24 @@
 #include "ModbusRtuPort.h"
 #include "ModbusSerialPort_p.h"
 
+inline ModbusSerialPortPrivate *d_cast(ModbusPortPrivate *d_ptr) { return static_cast<ModbusSerialPortPrivate*>(d_ptr); }
+
 ModbusRtuPort::ModbusRtuPort(bool blocking) :
     ModbusSerialPort(ModbusSerialPortPrivate::create(blocking))
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     d->c_buffSz = MB_RTU_IO_BUFF_SZ;
     d->buff = new uint8_t[MB_RTU_IO_BUFF_SZ];
 }
 
 ModbusRtuPort::~ModbusRtuPort()
 {
-    delete d_ModbusSerialPort(d_ptr)->buff;
+    delete[] d_cast(d_ptr)->buff;
 }
 
 StatusCode ModbusRtuPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff, uint16_t szInBuff)
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     uint16_t crc;
     // 2 is unit and function bytes + 2 bytes CRC16
     if (szInBuff > MB_RTU_IO_BUFF_SZ-(sizeof(crc)+2))
@@ -56,7 +58,7 @@ StatusCode ModbusRtuPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff,
 
 StatusCode ModbusRtuPort::readBuffer(uint8_t& unit, uint8_t& func, uint8_t *buff, uint16_t maxSzBuff, uint16_t *szOutBuff)
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     uint16_t crc;
     if (d->sz < 4) // Note: Unit + Func + 2 bytes CRC
         return d->setError(Status_BadNotCorrectRequest, StringLiteral("RTU. Not correct input. Input data length to small"));

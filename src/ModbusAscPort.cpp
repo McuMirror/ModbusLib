@@ -23,22 +23,24 @@
 #include "ModbusAscPort.h"
 #include "ModbusSerialPort_p.h"
 
+inline ModbusSerialPortPrivate *d_cast(ModbusPortPrivate *d_ptr) { return static_cast<ModbusSerialPortPrivate*>(d_ptr); }
+
 ModbusAscPort::ModbusAscPort(bool blocking) :
     ModbusSerialPort(ModbusSerialPortPrivate::create(blocking))
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     d->c_buffSz = MB_ASC_IO_BUFF_SZ;
     d->buff = new uint8_t[MB_ASC_IO_BUFF_SZ];
 }
 
 ModbusAscPort::~ModbusAscPort()
 {
-    delete d_ModbusSerialPort(d_ptr)->buff;
+    delete[] d_cast(d_ptr)->buff;
 }
 
 StatusCode ModbusAscPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff, uint16_t szInBuff)
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     const uint16_t szIBuff = MB_ASC_IO_BUFF_SZ/2;
     uint8_t ibuff[szIBuff];
     // 3 is unit, func and LRC bytes
@@ -58,7 +60,7 @@ StatusCode ModbusAscPort::writeBuffer(uint8_t unit, uint8_t func, uint8_t *buff,
 
 StatusCode ModbusAscPort::readBuffer(uint8_t& unit, uint8_t &func, uint8_t* buff, uint16_t maxSzBuff, uint16_t* szOutBuff)
 {
-    ModbusSerialPortPrivate *d = d_ModbusSerialPort(d_ptr);
+    ModbusSerialPortPrivate *d = d_cast(d_ptr);
     const uint16_t szIBuff = MB_ASC_IO_BUFF_SZ/2;
     uint8_t ibuff[szIBuff];
 

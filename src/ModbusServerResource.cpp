@@ -23,6 +23,8 @@
 #include "ModbusServerResource.h"
 #include "ModbusServerResource_p.h"
 
+inline ModbusServerResourcePrivate *d_cast(ModbusObjectPrivate *d_ptr) { return static_cast<ModbusServerResourcePrivate*>(d_ptr); }
+
 ModbusServerResource::ModbusServerResource(ModbusPort *port, ModbusInterface *device) :
     ModbusServerPort(new ModbusServerResourcePrivate(port, device))
 {
@@ -31,46 +33,46 @@ ModbusServerResource::ModbusServerResource(ModbusPort *port, ModbusInterface *de
 
 ModbusPort *ModbusServerResource::port() const
 {
-    return d_ModbusServerResource(d_ptr)->port;
+    return d_cast(d_ptr)->port;
 }
 
 ProtocolType ModbusServerResource::type() const
 {
-    return d_ModbusServerResource(d_ptr)->port->type();
+    return d_cast(d_ptr)->port->type();
 }
 
 StatusCode ModbusServerResource::open()
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     d->cmdClose = false;
     return Status_Good;
 }
 
 StatusCode ModbusServerResource::close()
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     d->cmdClose = true;
     return Status_Good;
 }
 
 bool ModbusServerResource::isOpen() const
 {
-    return d_ModbusServerResource(d_ptr)->port->isOpen();
+    return d_cast(d_ptr)->port->isOpen();
 }
 
 uint32_t ModbusServerResource::timeout() const
 {
-    return d_ModbusServerResource(d_ptr)->port->timeout();
+    return d_cast(d_ptr)->port->timeout();
 }
 
 void ModbusServerResource::setTimeout(uint32_t timeout)
 {
-    d_ModbusServerResource(d_ptr)->port->setTimeout(timeout);
+    d_cast(d_ptr)->port->setTimeout(timeout);
 }
 
 StatusCode ModbusServerResource::process()
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     const int szBuff = 500;
 
     StatusCode r = Status_Good;
@@ -103,8 +105,7 @@ StatusCode ModbusServerResource::process()
                 return r;
             if (StatusIsBad(r))  // an error occured
             {
-                d->setPortError(r);
-                signalError(d->getName(), r, d->lastPortErrorText());
+                SET_PORT_ERROR(r);
                 d->state = STATE_TIMEOUT;
                 return r;
             }
@@ -117,10 +118,7 @@ StatusCode ModbusServerResource::process()
             if (StatusIsProcessing(r))
                 return r;
             if (StatusIsBad(r))
-            {
-                d->setPortError(r);
-                signalError(d->getName(), r, d->lastPortErrorText());
-            }
+                SET_PORT_ERROR(r);
             signalClosed(this->objectName());
             d->state = STATE_CLOSED;
             return r;
@@ -143,22 +141,23 @@ StatusCode ModbusServerResource::process()
                 return r;
             if (StatusIsBad(r)) // an error occured
             {
-                d->setPortError(r);
-                signalError(d->getName(), r, d->lastPortErrorText());
+                SET_PORT_ERROR(r);
                 d->state = STATE_TIMEOUT;
-                return r;
+                RAISE_COMPLETED(r);
             }
             if (!d->port->isOpen())
             {
                 d->state = STATE_CLOSED;
                 signalClosed(this->objectName());
-                return Status_Uncertain;
+                RAISE_COMPLETED(Status_Uncertain);
             }
             signalRx(d->getName(), d->port->readBufferData(), d->port->readBufferSize());
             // verify unit id
             r = d->port->readBuffer(d->unit, d->func, buff, szBuff, &outBytes);
             if (StatusIsBad(r))
+            {
                 d->setPortError(r);
+            }
             else if (!d->isUnitEnabled(d->unit))
             {
                 d->state = STATE_BEGIN_READ;
@@ -168,7 +167,7 @@ StatusCode ModbusServerResource::process()
                 r = processInputData(buff, outBytes);
             if (StatusIsBad(r)) // data error
             {
-                signalError(d->getName(), r, d->getLastErrorText());
+                signalError(d->getName(), r, d->lastErrorTextData());
                 if (StatusIsStandardError(r)) // return standard error to device
                 {
                     d->state = STATE_BEGIN_WRITE;
@@ -178,7 +177,7 @@ StatusCode ModbusServerResource::process()
                 else
                 {
                     d->state = STATE_BEGIN_READ;
-                    return r;
+                    RAISE_COMPLETED(r);
                 }
             }
             d->state = STATE_PROCESS_DEVICE;
@@ -190,7 +189,7 @@ StatusCode ModbusServerResource::process()
             if ((r == Status_BadGatewayPathUnavailable) || d->isBroadcast())
             {
                 d->state = STATE_BEGIN_READ;
-                return r;
+                RAISE_COMPLETED(Modbus::Status_Good);
             }
             d->state = STATE_BEGIN_WRITE;
             // no need break
@@ -199,7 +198,7 @@ StatusCode ModbusServerResource::process()
             func = d->func;
             if (StatusIsBad(r))
             {
-                signalError(d->getName(), r, d->lastErrorText());
+                signalError(d->getName(), r, d->lastErrorTextData());
                 func |= MBF_EXCEPTION;
                 if (StatusIsStandardError(r))
                     buff[0] = static_cast<uint8_t>(r & 0xFF);
@@ -218,8 +217,7 @@ StatusCode ModbusServerResource::process()
                 return r;
             if (StatusIsBad(r))
             {
-                d->setPortError(r);
-                signalError(d->getName(), r, d->lastPortErrorText());
+                SET_PORT_ERROR(r);
                 d->state = STATE_TIMEOUT;
             }
             else
@@ -227,7 +225,7 @@ StatusCode ModbusServerResource::process()
                 signalTx(d->getName(), d->port->writeBufferData(), d->port->writeBufferSize());
                 d->state = STATE_BEGIN_READ;
             }
-            return r;
+            RAISE_COMPLETED(r);
         case STATE_TIMEOUT:
             if (timer() - d->timestamp < d->port->timeout())
                 return Status_Processing;
@@ -252,9 +250,18 @@ StatusCode ModbusServerResource::process()
     return Status_Processing;
 }
 
+const Modbus::Char *ModbusServerResource::lastErrorText() const
+{
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
+    if (d->isLastPortError)
+        return d->port->lastErrorText();
+    else
+        return d->lastErrorText.data();
+}
+
 StatusCode ModbusServerResource::processInputData(const uint8_t *buff, uint16_t sz)
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     switch (d->func)
     {
 
@@ -433,7 +440,7 @@ StatusCode ModbusServerResource::processInputData(const uint8_t *buff, uint16_t 
 
 StatusCode ModbusServerResource::processDevice()
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     StatusCode r;
     switch (d->func)
     {
@@ -549,7 +556,7 @@ StatusCode ModbusServerResource::processDevice()
 
 StatusCode ModbusServerResource::processOutputData(uint8_t *buff, uint16_t &sz)
 {
-    ModbusServerResourcePrivate *d = d_ModbusServerResource(d_ptr);
+    ModbusServerResourcePrivate *d = d_cast(d_ptr);
     switch (d->func)
     {
 #ifndef MBF_READ_COILS_DISABLE
