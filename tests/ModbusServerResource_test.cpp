@@ -672,7 +672,7 @@ TEST_F(ModbusServerResourceTest, SignalsExist)
 // Test signals emitted by ModbusServerResource (e.g., opened, closed etc.)
 // ============================================================================
 
-struct ModbusServerResourceSignalTest
+struct ModbusServerResourceSignalHandler
 {
     uint32_t openCount     {0};
     uint32_t closeCount    {0};
@@ -712,7 +712,7 @@ struct ModbusServerResourceSignalTest
     };
 };
 
-TEST(ModbusServerResource, testSignals)
+TEST(ModbusServerResourceSignalsTest, testSignals)
 {
     // NiceMock for ignoring uninteresting calls
     NiceMock<MockModbusPort> *port = new NiceMock<MockModbusPort>(true);
@@ -721,14 +721,14 @@ TEST(ModbusServerResource, testSignals)
     
     
     ModbusServerResource serverPort(port, &device);
-    ModbusServerResourceSignalTest signalHandler;
+    ModbusServerResourceSignalHandler signalHandler;
 
-    serverPort.connect(&ModbusServerResource::signalOpened   , &signalHandler, &ModbusServerResourceSignalTest::onOpened   );
-    serverPort.connect(&ModbusServerResource::signalClosed   , &signalHandler, &ModbusServerResourceSignalTest::onClosed   );
-    serverPort.connect(&ModbusServerResource::signalTx       , &signalHandler, &ModbusServerResourceSignalTest::onTx       );
-    serverPort.connect(&ModbusServerResource::signalRx       , &signalHandler, &ModbusServerResourceSignalTest::onRx       );
-    serverPort.connect(&ModbusServerResource::signalError    , &signalHandler, &ModbusServerResourceSignalTest::onError    );
-    serverPort.connect(&ModbusServerResource::signalCompleted, &signalHandler, &ModbusServerResourceSignalTest::onCompleted);
+    serverPort.connect(&ModbusServerResource::signalOpened   , &signalHandler, &ModbusServerResourceSignalHandler::onOpened   );
+    serverPort.connect(&ModbusServerResource::signalClosed   , &signalHandler, &ModbusServerResourceSignalHandler::onClosed   );
+    serverPort.connect(&ModbusServerResource::signalTx       , &signalHandler, &ModbusServerResourceSignalHandler::onTx       );
+    serverPort.connect(&ModbusServerResource::signalRx       , &signalHandler, &ModbusServerResourceSignalHandler::onRx       );
+    serverPort.connect(&ModbusServerResource::signalError    , &signalHandler, &ModbusServerResourceSignalHandler::onError    );
+    serverPort.connect(&ModbusServerResource::signalCompleted, &signalHandler, &ModbusServerResourceSignalHandler::onCompleted);
 
     const uint8_t  unit   = 1;
     const uint8_t  func   = MBF_READ_HOLDING_REGISTERS;

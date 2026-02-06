@@ -182,7 +182,7 @@ public: // SIGNALS
 
 protected:
     /// \details Checks for incoming connections and returns pointer `ModbusTcpSocket` if new connection established, `nullptr` otherwise.
-    ModbusTcpSocket *nextPendingConnection();
+    virtual ModbusTcpSocket *nextPendingConnection();
 
     /// \details Clear all allocated memory for previously established connections.
     void clearConnections();
