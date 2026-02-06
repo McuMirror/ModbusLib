@@ -167,7 +167,6 @@ StatusCode ModbusServerResource::process()
                 r = processInputData(buff, outBytes);
             if (StatusIsBad(r)) // data error
             {
-                signalError(d->getName(), r, d->lastErrorTextData());
                 if (StatusIsStandardError(r)) // return standard error to device
                 {
                     d->state = STATE_BEGIN_WRITE;
@@ -177,7 +176,7 @@ StatusCode ModbusServerResource::process()
                 else
                 {
                     d->state = STATE_BEGIN_READ;
-                    RAISE_COMPLETED(r);
+                    RAISE_ERROR_COMPLETED(r, d->lastErrorTextData())
                 }
             }
             d->state = STATE_PROCESS_DEVICE;
@@ -212,20 +211,25 @@ StatusCode ModbusServerResource::process()
             d->state = STATE_WRITE;
             // no need break
         case STATE_WRITE:
-            r = d->port->write();
-            if (StatusIsProcessing(r))
-                return r;
-            if (StatusIsBad(r))
+        {
+            // Note: r - status can be Bad so do not rewrite it,
+            // use separate `ws` variable for write status
+            Modbus::StatusCode ws = d->port->write();
+            if (StatusIsProcessing(ws))
+                return ws;
+            if (StatusIsBad(ws))
             {
-                SET_PORT_ERROR(r);
+                SET_PORT_ERROR(ws);
                 d->state = STATE_TIMEOUT;
+                RAISE_COMPLETED(ws)
             }
             else
             {
                 signalTx(d->getName(), d->port->writeBufferData(), d->port->writeBufferSize());
                 d->state = STATE_BEGIN_READ;
+                RAISE_COMPLETED(r)
             }
-            RAISE_COMPLETED(r);
+        }
         case STATE_TIMEOUT:
             if (timer() - d->timestamp < d->port->timeout())
                 return Status_Processing;
@@ -233,7 +237,7 @@ StatusCode ModbusServerResource::process()
             fRepeatAgain = true;
             break;
         default:
-            if (isOpen())
+            if (d->port->isOpen())
             {
                 if (d->cmdClose)
                     d->state = STATE_WAIT_FOR_CLOSE;
