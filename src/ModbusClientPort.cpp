@@ -87,6 +87,8 @@ Modbus::StatusCode ModbusClientPort::readCoils(ModbusObject *client, uint8_t uni
                           4,                // count of input data bytes
                           szBuff,           // maximum size of buffer
                           &szOutBuff);      // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (!szOutBuff)
@@ -140,6 +142,8 @@ Modbus::StatusCode ModbusClientPort::readDiscreteInputs(ModbusObject *client, ui
                           4,                        // count of input data bytes
                           szBuff,                   // maximum size of buffer
                           &szOutBuff);              // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (!szOutBuff)
@@ -193,6 +197,8 @@ Modbus::StatusCode ModbusClientPort::readHoldingRegisters(ModbusObject *client, 
                           4,                            // count of input data bytes
                           szBuff,                       // maximum size of buffer
                           &szOutBuff);                  // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (!szOutBuff)
@@ -248,6 +254,8 @@ Modbus::StatusCode ModbusClientPort::readInputRegisters(ModbusObject *client, ui
                           4,                              // count of input data bytes
                           szBuff,                         // maximum size of buffer
                           &szOutBuff);                    // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast()) // processing
             RAISE_COMPLETED(r);
         if (!szOutBuff)
@@ -295,6 +303,8 @@ Modbus::StatusCode ModbusClientPort::writeSingleCoil(ModbusObject *client, uint8
                           4,                              // count of input data bytes
                           szBuff,                         // maximum size of buffer
                           &szOutBuff);                    // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (szOutBuff != 4)
@@ -339,6 +349,8 @@ Modbus::StatusCode ModbusClientPort::writeSingleRegister(ModbusObject *client, u
                           4,                              // count of input data bytes
                           szBuff,                         // maximum size of buffer
                           &szOutBuff);                    // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -381,6 +393,8 @@ StatusCode ModbusClientPort::readExceptionStatus(ModbusObject *client, uint8_t u
                           0,                         // count of input data bytes
                           szBuff,                    // maximum size of buffer
                           &szOutBuff);               // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -421,6 +435,8 @@ Modbus::StatusCode ModbusClientPort::diagnostics(ModbusObject *client, uint8_t u
                           insize+2,         // count of input data bytes
                           szBuff,           // maximum size of buffer
                           &szOutBuff);      // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -462,6 +478,8 @@ Modbus::StatusCode ModbusClientPort::getCommEventCounter(ModbusObject *client, u
                           0,                          // count of input data bytes
                           szBuff,                     // maximum size of buffer
                           &szOutBuff);                // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -499,6 +517,8 @@ Modbus::StatusCode ModbusClientPort::getCommEventLog(ModbusObject *client, uint8
                           0,                      // count of input data bytes
                           szBuff,                 // maximum size of buffer
                           &szOutBuff);            // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -564,6 +584,8 @@ Modbus::StatusCode ModbusClientPort::writeMultipleCoils(ModbusObject *client, ui
                           5 + buff[4],              // count of input data bytes
                           szBuff,                   // maximum size of buffer
                           &szOutBuff);              // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (szOutBuff != 4)
@@ -626,6 +648,8 @@ Modbus::StatusCode ModbusClientPort::writeMultipleRegisters(ModbusObject *client
                           5 + buff[4],                    // count of input data bytes
                           szBuff,                         // maximum size of buffer
                           &szOutBuff);                    // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (szOutBuff != 4)
@@ -667,6 +691,8 @@ Modbus::StatusCode ModbusClientPort::reportServerID(ModbusObject *client, uint8_
                           0,                    // count of input data bytes
                           szBuff,               // maximum size of buffer
                           &szOutBuff);          // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -716,6 +742,8 @@ StatusCode ModbusClientPort::maskWriteRegister(ModbusObject *client, uint8_t uni
                           6,                              // count of input data bytes
                           szBuff,                         // maximum size of buffer
                           &szOutBuff);                    // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
 
@@ -786,6 +814,8 @@ StatusCode ModbusClientPort::readWriteMultipleRegisters(ModbusObject *client, ui
                           9 + buff[8],                      // count of input data bytes
                           szBuff,                           // maximum size of buffer
                           &szOutBuff);                      // count of output data bytes
+        if (StatusIsProcessing(r))
+            return r;
         if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (!szOutBuff)
@@ -830,7 +860,9 @@ Modbus::StatusCode ModbusClientPort::readFIFOQueue(ModbusObject *client, uint8_t
                           2,                   // count of input data bytes
                           szBuff,              // maximum size of buffer
                           &szOutBuff);         // count of output data bytes
-        if ((r != Status_Good) || d->isBroadcast()) // processing
+        if (StatusIsProcessing(r))
+            return r;
+        if ((r != Status_Good) || d->isBroadcast())
             RAISE_COMPLETED(r);
         if (szOutBuff < 4)
             RAISE_ERROR_COMPLETED(Status_BadNotCorrectResponse, StringLiteral("Incorrect received data size"));
@@ -1132,7 +1164,7 @@ StatusCode ModbusClientPort::request(uint8_t unit, uint8_t func, uint8_t *buff, 
             d->lastTries = 0;
             auto r = d->port->writeBuffer(unit, func, buff, szInBuff);
             if (StatusIsBad(r))
-                RAISE_PORT_ERROR(r);
+                RAISE_PORT_ERROR_COMPLETED(r);
             d->blockWriteBuffer();
         }
         StatusCode r = process();
