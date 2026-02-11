@@ -786,7 +786,7 @@ StatusCode ModbusClientPort::readWriteMultipleRegisters(ModbusObject *client, ui
         {
             const size_t len = 200;
             Char errbuff[len];
-            snprintf(errbuff, len, StringLiteral("FC23. Requested count of registers (read=%hu, write=%hu) is too large (max=%hu)"), readCount, writeCount, (uint16_t)MB_MAX_REGISTERS);  );
+            snprintf(errbuff, len, StringLiteral("FC23. Requested count of registers (read=%hu, write=%hu) is too large (max=%hu)"), readCount, writeCount, (uint16_t)MB_MAX_REGISTERS);
             this->cancelRequest(client);
             RAISE_ERROR_COMPLETED(Status_BadNotCorrectRequest, errbuff);
         }
