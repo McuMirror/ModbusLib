@@ -1164,7 +1164,7 @@ StatusCode ModbusClientPort::request(uint8_t unit, uint8_t func, uint8_t *buff, 
             d->lastTries = 0;
             auto r = d->port->writeBuffer(unit, func, buff, szInBuff);
             if (StatusIsBad(r))
-                RAISE_PORT_ERROR_COMPLETED(r);
+                RAISE_PORT_ERROR(r);
             d->blockWriteBuffer();
         }
         StatusCode r = process();
