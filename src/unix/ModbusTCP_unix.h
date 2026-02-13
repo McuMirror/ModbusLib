@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 #include "Modbus_unix.h"
 
