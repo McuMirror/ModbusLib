@@ -3,6 +3,7 @@
 #include "ModbusTcpPort_p_unix.h"
 
 #include <string.h>
+#include <sys/select.h>
 
 ModbusTcpPort::ModbusTcpPort(ModbusTcpSocket *socket, bool blocking) :
     ModbusPort(new ModbusTcpPortPrivateUnix(socket, blocking))
