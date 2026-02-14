@@ -124,3 +124,11 @@
 * Add functions `fillUnitMap`, `unitMapToString`
 * Update tests
 * Update docs
+
+# 0.4.9
+
+* Extend `Modbus::availableSerialPorts()` for Windows
+* Add functions `ModbusServerPort::unitMapString()`, `ModbusServerPort::setUnitMapString()`
+* Add signal functions `ModbusClientPort::signalCompleted()` and `ModbusServerPort::signalCompleted()`
+* Improve error text messages
+* Improve unit tests
